@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="referrer" content="no-referrer">
+  <title>Acessar Telegram</title>
+  <style>
+    *{box-sizing:border-box}body{margin:0;min-height:100svh;display:grid;place-items:center;padding:24px;background:#f3f7fa;color:#173347;font:17px/1.6 system-ui,sans-serif}main{width:100%;max-width:440px;background:white;border:1px solid #dce7ef;border-radius:20px;padding:36px;box-shadow:0 12px 40px #17334708}small{font-weight:700;letter-spacing:.14em;color:#436577}h1{font-size:30px;line-height:1.2;margin:18px 0}p{color:#476172}a,button{font:inherit}#continuar,button{display:block;text-align:center;width:100%;padding:14px 20px;border:0;border-radius:10px;background:#096caa;color:white;font-weight:650;text-decoration:none;cursor:pointer}a:focus-visible,button:focus-visible{outline:3px solid #173347;outline-offset:4px}[hidden]{display:none!important}.nota{font-size:14px;margin-bottom:0}
+  </style>
+</head>
+<body>
+  <main>
+    <small>TELEGRAM</small>
+    <h1 id="titulo">Só um instante.</h1>
+    <p id="status" role="status" aria-live="polite">Estamos preparando seu acesso.</p>
+    <a id="continuar" hidden rel="noreferrer">Abrir Telegram</a>
+    <button id="tentar" hidden type="button">Tentar novamente</button>
+    <p class="nota" id="nota" hidden>Se não abrir automaticamente, toque no botão acima.</p>
+    <noscript><p>Ative o JavaScript e recarregue esta página para consultar o endereço atual do Telegram.</p></noscript>
+  </main>
+  <script src="redirect.js"></script>
+</body>
+</html>
