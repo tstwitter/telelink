@@ -1,0 +1,64 @@
+name: Central de links
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+  schedule:
+    - cron: '2-59/5 * * * *'
+
+concurrency:
+  group: central-pages
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+jobs:
+  central:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    env:
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+      TELEGRAM_ADMIN_ID: ${{ secrets.TELEGRAM_ADMIN_ID }}
+      TELEGRAM_CHANNEL_ID: ${{ secrets.TELEGRAM_CHANNEL_ID }}
+      PUBLIC_BASE_URL: https://tstwitter.github.io/telelink/
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Testar o controle
+        run: python -m unittest discover -s tests -v
+      - name: Processar comandos
+        id: bot
+        if: github.event_name != 'push'
+        run: python scripts/telegram_bot.py process
+      - name: Preparar somente os arquivos públicos
+        if: github.event_name != 'schedule' || steps.bot.outputs.deploy == 'true'
+        run: |
+          mkdir -p _site
+          cp index.html redirect.js config.json .nojekyll _site/
+      - name: Configurar Pages
+        if: github.event_name != 'schedule' || steps.bot.outputs.deploy == 'true'
+        uses: actions/configure-pages@v5
+      - name: Enviar página
+        if: github.event_name != 'schedule' || steps.bot.outputs.deploy == 'true'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - name: Publicar página
+        id: deployment
+        if: github.event_name != 'schedule' || steps.bot.outputs.deploy == 'true'
+        uses: actions/deploy-pages@v5
+      - name: Confirmar publicação e avisar canal
+        if: steps.deployment.outcome == 'success' && env.TELEGRAM_BOT_TOKEN != '' && env.TELEGRAM_CHANNEL_ID != ''
+        run: python scripts/telegram_bot.py complete
+      - name: Avisar falha
+        if: failure()
+        run: python scripts/telegram_bot.py failure
