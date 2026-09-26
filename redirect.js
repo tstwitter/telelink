@@ -43,22 +43,42 @@
   const retry = document.getElementById("tentar");
   retry.addEventListener("click", () => window.location.reload());
 
+  const API_URL = "https://throbbing-feather-954e.sablovisck.workers.dev/config";
+
   async function start() {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 8000);
     try {
-      // Consulta atualizada a cada visita; nunca persiste o destino no navegador.
-      const configUrl = new URL("config.json", window.location.href);
-      configUrl.searchParams.set("v", Date.now().toString());
-      const response = await fetch(configUrl, { cache: "no-store", signal: controller.signal });
-      if (!response.ok) throw new Error("Configuração indisponível.");
-      const destination = resolveDestination(await response.json(), window.location.search);
+      let configData = null;
+
+      // 1. Tenta buscar em tempo real na API ultra-rápida (Cloudflare KV)
+      try {
+        const liveUrl = new URL(API_URL);
+        liveUrl.searchParams.set("v", Date.now().toString());
+        const apiRes = await fetch(liveUrl, { cache: "no-store", signal: controller.signal });
+        if (apiRes.ok) {
+          configData = await apiRes.json();
+        }
+      } catch (err) {
+        // Fallback transparente se houver erro de rede
+      }
+
+      // 2. Se a API falhar, usa o config.json local como backup de segurança
+      if (!configData) {
+        const configUrl = new URL("config.json", window.location.href);
+        configUrl.searchParams.set("v", Date.now().toString());
+        const response = await fetch(configUrl, { cache: "no-store", signal: controller.signal });
+        if (!response.ok) throw new Error("Configuração indisponível.");
+        configData = await response.json();
+      }
+
+      const destination = resolveDestination(configData, window.location.search);
       link.href = destination;
       link.hidden = false;
       document.getElementById("nota").hidden = false;
       title.textContent = "Seu acesso está pronto.";
       status.textContent = "Você será encaminhado ao Telegram.";
-      // O botão fica disponível mesmo se o navegador bloquear a navegação.
+      // O botão fica disponível mesmo se o navegador bloquear o redirecionamento
       setTimeout(() => {
         try { window.location.replace(destination); }
         catch { status.textContent = "Toque no botão para continuar ao Telegram."; }
