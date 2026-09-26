@@ -156,7 +156,7 @@ def process():
     required = ('TELEGRAM_BOT_TOKEN', 'TELEGRAM_ADMIN_ID', 'TELEGRAM_CHANNEL_ID')
     if any(not os.environ.get(key) for key in required):
         raise SafeError('Configure os três Secrets do Telegram antes de ativar o controle.')
-    admin = os.environ['TELEGRAM_ADMIN_ID']
+    admin = os.environ['TELEGRAM_ADMIN_ID'].strip()
     if not re.fullmatch(r'[1-9][0-9]*', admin):
         raise SafeError('TELEGRAM_ADMIN_ID deve conter o ID numérico da conta administradora.')
     if telegram('getWebhookInfo').get('url'):
@@ -170,15 +170,20 @@ def process():
                                       'limit': 100, 'allowed_updates': ['message']})
     initial = copy.deepcopy(config)
     replies = []
+    accepted = 0
+    rejected_private = 0
     for update in updates:
         if update['update_id'] < state['offset']:
             continue
         message = update.get('message', {})
         if authorized(message, admin):
+            accepted += 1
             config, reply = command(config, message.get('text', ''),
                                     os.environ['PUBLIC_BASE_URL'], bot_username)
             if reply:
                 replies.append(reply)
+        elif message.get('chat', {}).get('type') == 'private':
+            rejected_private += 1
         state['offset'] = update['update_id'] + 1
     changed = config != initial
     state['pending_deploy'] = bool(state.get('pending_deploy') or changed)
@@ -187,6 +192,9 @@ def process():
     if updates:
         persist(config, state, 'Atualiza central pelo Telegram' if changed else 'Registra comandos processados')
     output('deploy', state['pending_deploy'])
+    print(f'Mensagens recebidas: {len(updates)}; autorizadas: {accepted}; privadas sem autorização: {rejected_private}.')
+    if rejected_private and not accepted:
+        print('::warning::Nenhuma mensagem privada veio do administrador configurado. Confira TELEGRAM_ADMIN_ID: deve ser o ID pessoal, não o ID do bot nem do canal. Após corrigir, envie um NOVO /start.')
     failed_replies = False
     for reply in replies:
         try:

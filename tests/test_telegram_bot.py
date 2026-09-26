@@ -15,6 +15,9 @@ spec.loader.exec_module(bot)
 class Commands(unittest.TestCase):
     def setUp(self):
         self.config = {'destinos': {'hubTS': 'https://t.me/+Original'}, 'enviarOrigemAoBot': False}
+        silence = patch.object(bot, 'print', create=True)
+        silence.start()
+        self.addCleanup(silence.stop)
 
     def run_command(self, text):
         return bot.command(self.config, text, 'https://example.com/', 'managerseo3_bot')
