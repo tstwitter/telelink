@@ -35,12 +35,16 @@ Confirme que a execução terminou verde, que a resposta chegou no privado e que
 ```text
 /start
 /listar
+/pastas
+/pasta Trans
 /link hubTS
 /criar nome https://t.me/SeuBot
+/criarpasta Trans nome https://t.me/SeuBot
 /destino hubTS https://t.me/NovoDestino
+/destinopasta Trans https://t.me/NovoDestino
 ```
 
-Os dois últimos são exemplos: substitua pelo destino real. `/criar` não sobrescreve nomes existentes; `/destino` exige um nome já cadastrado. Somente mensagens privadas vindas do ID administrador são aceitas. Os nomes diferenciam maiúsculas de minúsculas.
+Os endereços são exemplos: substitua pelo destino real. `/criar` não sobrescreve nomes existentes; `/destino` exige um nome já cadastrado. `/pasta` mostra somente os links daquele grupo e `/destinopasta` troca todos eles de uma vez. Somente mensagens privadas vindas do ID administrador são aceitas. Os nomes diferenciam maiúsculas de minúsculas.
 
 ## Funcionamento e limites
 

@@ -32,6 +32,8 @@ Use ?bot=loiras&src=twitter01. Esta versão não conta nem armazena cliques. Opc
 
 Controle por comandos implementado via GitHub Actions; consulte ATIVAR-BOT.md para ativar os Secrets e a publicação. Apenas o administrador autorizado pode criar e trocar destinos. Alertas de publicação e falhas estão incluídos. Detecção de bots removidos ainda não está implementada. Nunca exponha tokens no repositório ou na página.
 
+Os destinos podem ser organizados em `grupos` no `config.json`. Use `/pastas` para ver os grupos, `/pasta Trans` para abrir um grupo, `/criarpasta Trans nome URL` para adicionar um link nele e `/destinopasta Trans URL` para trocar todos os destinos desse grupo de uma vez. A organização só afeta o painel do bot; os endereços públicos continuam usando `?bot=nome`.
+
 ## Verificação
 
 Após publicar, teste cada nome, uma origem src e uma troca de destino, incluindo o navegador interno do X. Um nome desconhecido deve mostrar indisponibilidade.

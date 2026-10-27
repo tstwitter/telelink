@@ -14,10 +14,14 @@ ROOT = Path(__file__).resolve().parents[1]
 STATE = '.github/telegram-state.json'
 HELP = (
     'Central de links\n\n'
-    '/listar — ver destinos\n'
+    '/listar — ver links soltos e pastas\n'
+    '/pastas — ver as pastas\n'
+    '/pasta Trans — ver os links de uma pasta\n'
     '/link hubTS — copiar o link fixo\n'
     '/criar nome https://t.me/SeuBot — criar um link\n'
-    '/destino hubTS https://t.me/NovoDestino — trocar o destino\n\n'
+    '/criarpasta Trans nome https://t.me/SeuBot — criar dentro da pasta\n'
+    '/destino hubTS https://t.me/NovoDestino — trocar um destino\n'
+    '/destinopasta Trans https://t.me/NovoDestino — trocar todos da pasta\n\n'
     'Os nomes diferenciam maiúsculas de minúsculas. '
     'Consultas programadas a cada 5 minutos, sujeitas a atrasos. '
     'Depois de uma alteração, aguarde a confirmação da publicação no canal. '
@@ -54,6 +58,7 @@ def command(config, text, base, bot_username):
     """Return a new config and reply; never mutate caller state."""
     result = copy.deepcopy(config)
     destinations = result['destinos']
+    groups = result.get('grupos', {})
     parts = text.split()
     if not parts:
         return result, HELP
@@ -63,9 +68,61 @@ def command(config, text, base, bot_username):
     name = name.lower()
     if name in ('/start', '/ajuda', '/help'):
         return result, HELP
-    if name == '/listar':
-        rows = [f'{key}\n{url}\n{public_link(base, key)}' for key, url in sorted(destinations.items())]
-        return result, '\n\n'.join(rows) if rows else 'Nenhum destino cadastrado. Use /criar.'
+    if name in ('/listar', '/pastas'):
+        grouped = {key for members in groups.values() if isinstance(members, list) for key in members}
+        folder_rows = [f'{folder} ({len([key for key in members if key in destinations])} links)'
+                       for folder, members in sorted(groups.items()) if isinstance(members, list)]
+        if name == '/pastas':
+            return result, ('Pastas:\n' + '\n'.join(folder_rows)) if folder_rows else 'Nenhuma pasta cadastrada.'
+        loose = [f'{key}\n{url}\n{public_link(base, key)}'
+                 for key, url in sorted(destinations.items()) if key not in grouped]
+        sections = []
+        if loose:
+            sections.append('Links sem pasta:\n\n' + '\n\n'.join(loose))
+        if folder_rows:
+            sections.append('Pastas:\n' + '\n'.join(folder_rows)
+                            + '\n\nUse /pasta NOME para abrir uma pasta.')
+        return result, '\n\n'.join(sections) if sections else 'Nenhum destino cadastrado. Use /criar.'
+    if name == '/pasta' and len(parts) == 2:
+        folder = parts[1]
+        if folder not in groups or not isinstance(groups[folder], list):
+            return result, 'Pasta não cadastrada. Use /pastas.'
+        rows = [f'{key}\n{public_link(base, key)}' for key in groups[folder] if key in destinations]
+        return result, (f'Pasta {folder} ({len(rows)} links):\n\n' + '\n\n'.join(rows))
+    if name == '/destinopasta':
+        if len(parts) != 3:
+            return result, 'Use: /destinopasta pasta https://t.me/NovoDestino'
+        folder, destination = parts[1:]
+        if folder not in groups or not isinstance(groups[folder], list):
+            return result, 'Pasta não cadastrada. Use /pastas.'
+        if not valid_destination(destination):
+            return result, 'Destino inválido. Use um endereço completo https://t.me/ de bot, canal ou convite.'
+        members = [key for key in groups[folder] if key in destinations]
+        if not members:
+            return result, 'Essa pasta não possui links válidos.'
+        if all(destinations[key] == destination for key in members):
+            return result, 'Todos os links dessa pasta já usam esse destino.'
+        for key in members:
+            destinations[key] = destination
+        return result, (f'Destino atualizado para os {len(members)} links da pasta {folder}.\n'
+                        'Aguarde a confirmação de publicação no canal antes de testar.')
+    if name == '/criarpasta':
+        if len(parts) != 4:
+            return result, 'Use: /criarpasta pasta nome https://t.me/SeuDestino'
+        folder, key, destination = parts[1:]
+        if not re.fullmatch(r'[A-Za-z0-9_-]{1,64}', folder):
+            return result, 'Nome da pasta inválido. Use até 64 letras sem acentos, números, hífen ou sublinhado.'
+        if not re.fullmatch(r'[A-Za-z0-9_-]{1,64}', key):
+            return result, 'Nome inválido. Use até 64 letras sem acentos, números, hífen ou sublinhado.'
+        if not valid_destination(destination):
+            return result, 'Destino inválido. Use um endereço completo https://t.me/ de bot, canal ou convite.'
+        if key in destinations:
+            return result, 'Esse nome já existe. Para alterar, use /destino.'
+        destinations[key] = destination
+        groups = result.setdefault('grupos', {})
+        groups.setdefault(folder, []).append(key)
+        return result, (f'Link {key} criado na pasta {folder}.\n' + public_link(base, key)
+                        + '\nAguarde a confirmação de publicação no canal antes de testar.')
     if name == '/link' and len(parts) == 2:
         return result, public_link(base, parts[1]) if parts[1] in destinations else 'Nome não cadastrado. Use /listar.'
     if name not in ('/criar', '/destino'):

@@ -65,6 +65,38 @@ class Commands(unittest.TestCase):
         self.assertEqual(result, self.config)
         self.assertIsNone(reply)
 
+    def test_folder_listing_and_bulk_destination(self):
+        config = {
+            'destinos': {
+                'sinfuldolls': 'https://t.me/+Original',
+                'Radartrans': 'https://t.me/+Original',
+                'solto': 'https://t.me/SoltoBot'
+            },
+            'grupos': {'Trans': ['sinfuldolls', 'Radartrans']},
+            'enviarOrigemAoBot': False
+        }
+        folders, reply = bot.command(config, '/pastas', 'https://example.com/', 'managerseo3_bot')
+        self.assertEqual(folders, config)
+        self.assertIn('Trans (2 links)', reply)
+        listed, reply = bot.command(config, '/pasta Trans', 'https://example.com/', 'managerseo3_bot')
+        self.assertEqual(listed, config)
+        self.assertIn('?bot=sinfuldolls', reply)
+        self.assertNotIn('?bot=solto', reply)
+        changed, reply = bot.command(
+            config, '/destinopasta Trans https://t.me/+Novo',
+            'https://example.com/', 'managerseo3_bot')
+        self.assertEqual(changed['destinos']['sinfuldolls'], 'https://t.me/+Novo')
+        self.assertEqual(changed['destinos']['Radartrans'], 'https://t.me/+Novo')
+        self.assertEqual(changed['destinos']['solto'], 'https://t.me/SoltoBot')
+        self.assertIn('2 links', reply)
+
+    def test_create_inside_folder(self):
+        result, reply = self.run_command(
+            '/criarpasta Trans novo https://t.me/NovoBot')
+        self.assertEqual(result['destinos']['novo'], 'https://t.me/NovoBot')
+        self.assertEqual(result['grupos']['Trans'], ['novo'])
+        self.assertIn('?bot=novo', reply)
+
     def test_processing_persists_before_reply_and_requests_deploy(self):
         events = []
         update = {'update_id': 10, 'message': {'from': {'id': 123},

@@ -57,7 +57,13 @@
         liveUrl.searchParams.set("v", Date.now().toString());
         const apiRes = await fetch(liveUrl, { cache: "no-store", signal: controller.signal });
         if (apiRes.ok) {
-          configData = await apiRes.json();
+          const apiConfig = await apiRes.json();
+          const requestedKey = new URLSearchParams(window.location.search).get("bot");
+          // Uma API desatualizada não pode esconder links já publicados no GitHub.
+          if (!apiConfig.destinos || !requestedKey ||
+              Object.prototype.hasOwnProperty.call(apiConfig.destinos, requestedKey)) {
+            configData = apiConfig;
+          }
         }
       } catch (err) {
         // Fallback transparente se houver erro de rede
