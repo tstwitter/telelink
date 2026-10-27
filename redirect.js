@@ -69,7 +69,7 @@
         // Fallback transparente se houver erro de rede
       }
 
-      // 2. Se a API falhar, usa o config.json local como backup de segurança
+      // 2. Se a API falhar ou não conhecer o link, usa o config.json publicado.
       if (!configData) {
         const configUrl = new URL("config.json", window.location.href);
         configUrl.searchParams.set("v", Date.now().toString());
@@ -84,7 +84,7 @@
       document.getElementById("nota").hidden = false;
       title.textContent = "Seu acesso está pronto.";
       status.textContent = "Você será encaminhado ao Telegram.";
-      // O botão fica disponível mesmo se o navegador bloquear o redirecionamento
+      // O botão fica disponível mesmo se o navegador bloquear o redirecionamento.
       setTimeout(() => {
         try { window.location.replace(destination); }
         catch { status.textContent = "Toque no botão para continuar ao Telegram."; }
