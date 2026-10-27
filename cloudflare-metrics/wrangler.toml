@@ -1,0 +1,13 @@
+name = "telelink-metrics"
+main = "src/worker.js"
+compatibility_date = "2026-10-27"
+
+[vars]
+ALLOWED_ORIGIN = "https://tstwitter.github.io"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "telelink-metrics"
+database_id = "b05e55ef-9bdc-4e4f-a338-67eecd43cea4"
+
+# Cadastre STATS_TOKEN como Secret do Worker; nunca coloque o valor aqui.

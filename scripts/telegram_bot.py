@@ -1,11 +1,13 @@
 """Telegram controller, executed periodically by GitHub Actions. No dependencies."""
 import copy
+from datetime import datetime
 import json
 import os
 from pathlib import Path
 import re
 import subprocess
 import sys
+from zoneinfo import ZoneInfo
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode, urlsplit
 from urllib.request import Request, urlopen
@@ -21,7 +23,9 @@ HELP = (
     '/criar nome https://t.me/SeuBot — criar um link\n'
     '/criarpasta Trans nome https://t.me/SeuBot — criar dentro da pasta\n'
     '/destino hubTS https://t.me/NovoDestino — trocar um destino\n'
-    '/destinopasta Trans https://t.me/NovoDestino — trocar todos da pasta\n\n'
+    '/destinopasta Trans https://t.me/NovoDestino — trocar todos da pasta\n'
+    '/trafego Trans hoje — acessos de hoje\n'
+    '/ranking Trans 7d — ranking dos últimos 7 dias\n\n'
     'Os nomes diferenciam maiúsculas de minúsculas. '
     'Consultas programadas a cada 5 minutos, sujeitas a atrasos. '
     'Depois de uma alteração, aguarde a confirmação da publicação no canal. '
@@ -171,6 +175,89 @@ def send(chat_id, text):
                                 'link_preview_options': {'is_disabled': True}})
 
 
+def fetch_metrics(period):
+    base = os.environ.get('METRICS_API_URL', '').strip().rstrip('/')
+    token = os.environ.get('METRICS_API_TOKEN', '').strip()
+    try:
+        parsed = urlsplit(base)
+    except ValueError:
+        parsed = None
+    if not base or not token or not parsed or parsed.scheme != 'https' or not parsed.netloc:
+        raise SafeError('As métricas ainda não foram ativadas.')
+    request = Request(base + '/stats?' + urlencode({'period': period}),
+                      headers={'Authorization': 'Bearer ' + token})
+    try:
+        with urlopen(request, timeout=20) as response:
+            result = json.load(response)
+    except HTTPError as error:
+        raise SafeError(f'Métricas: HTTP {error.code}. Confira os Secrets.') from None
+    except (URLError, TimeoutError, OSError, ValueError):
+        raise SafeError('Não foi possível consultar as métricas agora.') from None
+    if not result.get('ok') or not isinstance(result.get('counts'), list):
+        raise SafeError('A API de métricas retornou uma resposta inválida.')
+    return {str(row.get('bot')): int(row.get('clicks', 0)) for row in result['counts']}
+
+
+def traffic_reply(config, text, bot_username, provider=fetch_metrics):
+    parts = text.split()
+    if not parts:
+        return None
+    name, _, mention = parts[0].partition('@')
+    if mention and mention.lower() != bot_username.lower():
+        return None
+    name = name.lower()
+    if name not in ('/trafego', '/ranking'):
+        return None
+    if len(parts) not in (2, 3):
+        return ('Use: /trafego nome hoje\n'
+                'ou: /ranking pasta 7d')
+    target = parts[1]
+    period_input = parts[2].lower() if len(parts) == 3 else 'hoje'
+    periods = {'hoje': ('today', 'hoje'), 'today': ('today', 'hoje'),
+               '7d': ('7d', 'últimos 7 dias'), '30d': ('30d', 'últimos 30 dias')}
+    if period_input not in periods:
+        return 'Período inválido. Use hoje, 7d ou 30d.'
+    period, label = periods[period_input]
+    groups = config.get('grupos', {})
+    destinations = config.get('destinos', {})
+    if target in groups and isinstance(groups[target], list):
+        members = [key for key in groups[target] if key in destinations]
+        title = f'Pasta {target} — {label}'
+    elif target in destinations and name == '/trafego':
+        members = [target]
+        title = f'{target} — {label}'
+    else:
+        return 'Link ou pasta não cadastrado. Use /listar ou /pastas.'
+    counts = provider(period)
+    rows = sorted(((key, max(0, counts.get(key, 0))) for key in members),
+                  key=lambda item: (-item[1], item[0].lower()))
+    total = sum(value for _, value in rows)
+    if len(rows) == 1:
+        return f'{title}\n\nVocê teve {total:,} acessos 🤩🎉'.replace(',', '.')
+    ranking = '\n'.join(
+        f'{index}. {key}: {value:,} acessos'.replace(',', '.')
+        for index, (key, value) in enumerate(rows, 1)
+    )
+    return (f'{title}\n\n{ranking}\n\n'
+            f'Total: {total:,} acessos 🤩🎉').replace(',', '.')
+
+
+def daily_report(config, folder, counts):
+    members = config.get('grupos', {}).get(folder, [])
+    rows = sorted(((key, max(0, counts.get(key, 0))) for key in members),
+                  key=lambda item: (-item[1], item[0].lower()))
+    total = sum(value for _, value in rows)
+    if not total:
+        return f'Relatório diário — Pasta {folder}\n\nHoje não houve acessos registrados.'
+    ranking = '\n'.join(
+        f'{index}. {key}: {value:,} acessos'.replace(',', '.')
+        for index, (key, value) in enumerate(rows[:10], 1) if value > 0
+    )
+    return (f'Relatório diário — Pasta {folder} 🎉\n\n'
+            f'Você teve {total:,} acessos hoje 🤩\n\n'
+            f'{ranking}\n\nTotal: {total:,} acessos').replace(',', '.')
+
+
 def read_json(relative, default=None):
     path = ROOT / relative
     if not path.exists() and default is not None:
@@ -235,8 +322,14 @@ def process():
         message = update.get('message', {})
         if authorized(message, admin):
             accepted += 1
-            config, reply = command(config, message.get('text', ''),
-                                    os.environ['PUBLIC_BASE_URL'], bot_username)
+            text = message.get('text', '')
+            try:
+                reply = traffic_reply(config, text, bot_username)
+            except SafeError as error:
+                reply = str(error)
+            if reply is None:
+                config, reply = command(config, text,
+                                        os.environ['PUBLIC_BASE_URL'], bot_username)
             if reply:
                 replies.append(reply)
         elif message.get('chat', {}).get('type') == 'private':
@@ -261,6 +354,18 @@ def process():
     if failed_replies:
         # Do not prevent publishing a change that was already saved.
         print('::warning::Comandos salvos, mas uma resposta privada falhou. Consulte /listar após corrigir o acesso ao bot.')
+    now = datetime.now(ZoneInfo('America/Sao_Paulo'))
+    today = now.date().isoformat()
+    metrics_ready = bool(os.environ.get('METRICS_API_URL') and os.environ.get('METRICS_API_TOKEN'))
+    if (metrics_ready and (now.hour, now.minute) >= (23, 50)
+            and state.get('last_daily_report') != today):
+        try:
+            report = daily_report(config, 'Trans', fetch_metrics('today'))
+            send(os.environ['TELEGRAM_CHANNEL_ID'], report)
+            state['last_daily_report'] = today
+            persist(config, state, 'Registra relatório diário de acessos')
+        except SafeError:
+            print('::warning::Não foi possível enviar o relatório diário de acessos.')
 
 
 def complete():

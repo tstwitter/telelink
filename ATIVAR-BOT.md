@@ -42,9 +42,14 @@ Confirme que a execução terminou verde, que a resposta chegou no privado e que
 /criarpasta Trans nome https://t.me/SeuBot
 /destino hubTS https://t.me/NovoDestino
 /destinopasta Trans https://t.me/NovoDestino
+/trafego Trans hoje
+/trafego sinfuldolls 7d
+/ranking Trans 7d
 ```
 
 Os endereços são exemplos: substitua pelo destino real. `/criar` não sobrescreve nomes existentes; `/destino` exige um nome já cadastrado. `/pasta` mostra somente os links daquele grupo e `/destinopasta` troca todos eles de uma vez. Somente mensagens privadas vindas do ID administrador são aceitas. Os nomes diferenciam maiúsculas de minúsculas.
+
+Os comandos de tráfego exigem os Secrets `METRICS_API_URL` e `METRICS_API_TOKEN`. Consulte `cloudflare-metrics/CONFIGURAR.txt`. O relatório diário é enviado pelo Cloudflare Worker aproximadamente às 23h55 de São Paulo.
 
 ## Funcionamento e limites
 

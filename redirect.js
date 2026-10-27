@@ -32,8 +32,28 @@
     return destination.href;
   }
 
+  function recordAccess(config, search) {
+    if (typeof navigator === "undefined" || typeof navigator.sendBeacon !== "function") return;
+    if (!config || typeof config.metricasUrl !== "string" || !config.metricasUrl.trim()) return;
+    const params = new URLSearchParams(search);
+    const bot = params.get("bot");
+    const source = params.get("src");
+    if (!bot || !/^[A-Za-z0-9_-]{1,64}$/.test(bot)) return;
+    try {
+      const endpoint = new URL(config.metricasUrl.trim());
+      if (endpoint.protocol !== "https:") return;
+      const payload = JSON.stringify({
+        bot,
+        src: source && /^[A-Za-z0-9_-]{1,64}$/.test(source) ? source : null
+      });
+      navigator.sendBeacon(endpoint.href, new Blob([payload], { type: "text/plain" }));
+    } catch {
+      // Métricas nunca podem impedir o redirecionamento.
+    }
+  }
+
   if (typeof module !== "undefined" && module.exports) {
-    module.exports = { resolveDestination };
+    module.exports = { resolveDestination, recordAccess };
   }
   if (typeof document === "undefined") return;
 
@@ -79,6 +99,7 @@
       }
 
       const destination = resolveDestination(configData, window.location.search);
+      recordAccess(configData, window.location.search);
       link.href = destination;
       link.hidden = false;
       document.getElementById("nota").hidden = false;

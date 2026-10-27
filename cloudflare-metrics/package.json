@@ -1,0 +1,8 @@
+{
+  "name": "telelink-metrics",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test test/worker.test.js"
+  }
+}

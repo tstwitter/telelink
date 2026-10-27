@@ -1,0 +1,38 @@
+MÉTRICAS DA CENTRAL DE LINKS
+
+Esta pasta contém um Cloudflare Worker separado para registrar acessos.
+Ele não armazena IP, nome, username do visitante ou outras informações pessoais.
+
+O que ele oferece:
+
+- POST /event registra um acesso por link;
+- GET /stats?period=today retorna o total de hoje;
+- GET /stats?period=7d retorna os últimos sete dias;
+- GET /stats?period=30d retorna os últimos trinta dias;
+- consulta protegida usada pelo bot para montar o relatório diário.
+
+CONFIGURAÇÃO NO CLOUDFLARE
+
+1. Crie um banco D1 chamado telelink-metrics.
+2. Execute o arquivo schema.sql nesse banco.
+3. Crie um Worker usando src/worker.js.
+4. Vincule o banco D1 ao Worker com o nome DB.
+5. Configure ALLOWED_ORIGIN como https://tstwitter.github.io.
+6. Cadastre este Secret no Worker:
+
+STATS_TOKEN = senha longa e aleatória usada apenas pelo bot
+
+7. Depois da publicação, copie o endpoint para config.json:
+
+"metricasUrl": "https://SEU-WORKER.workers.dev/event"
+
+8. No GitHub Actions, cadastre:
+
+METRICS_API_URL = https://SEU-WORKER.workers.dev
+METRICS_API_TOKEN = o mesmo valor do STATS_TOKEN
+
+SEGURANÇA
+
+Nunca coloque STATS_TOKEN em config.json, redirect.js, wrangler.toml ou qualquer
+arquivo enviado ao GitHub. O relatório é enviado pelo bot já configurado no GitHub,
+aproximadamente às 23h50 de São Paulo.

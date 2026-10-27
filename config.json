@@ -42,5 +42,6 @@
       "transyula"
     ]
   },
+  "metricasUrl": "https://telelink-metrics.sablovisck.workers.dev/event",
   "enviarOrigemAoBot": false
 }

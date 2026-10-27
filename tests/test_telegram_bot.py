@@ -97,6 +97,43 @@ class Commands(unittest.TestCase):
         self.assertEqual(result['grupos']['Trans'], ['novo'])
         self.assertIn('?bot=novo', reply)
 
+    def test_traffic_folder_ranking(self):
+        config = {
+            'destinos': {
+                'sinfuldolls': 'https://t.me/+Original',
+                'Radartrans': 'https://t.me/+Original'
+            },
+            'grupos': {'Trans': ['sinfuldolls', 'Radartrans']}
+        }
+        reply = bot.traffic_reply(
+            config, '/ranking Trans 7d', 'managerseo3_bot',
+            provider=lambda period: {'sinfuldolls': 1420, 'Radartrans': 987})
+        self.assertIn('Pasta Trans — últimos 7 dias', reply)
+        self.assertIn('1. sinfuldolls: 1.420 acessos', reply)
+        self.assertIn('Total: 2.407 acessos', reply)
+
+    def test_traffic_single_and_validation(self):
+        config = {'destinos': {'sinfuldolls': 'https://t.me/+Original'}, 'grupos': {}}
+        reply = bot.traffic_reply(
+            config, '/trafego sinfuldolls hoje', 'managerseo3_bot',
+            provider=lambda period: {'sinfuldolls': 25})
+        self.assertIn('25 acessos', reply)
+        self.assertIn('hoje', reply)
+        reply = bot.traffic_reply(
+            config, '/trafego ausente hoje', 'managerseo3_bot', provider=lambda period: {})
+        self.assertIn('não cadastrado', reply)
+        reply = bot.traffic_reply(
+            config, '/trafego sinfuldolls ano', 'managerseo3_bot', provider=lambda period: {})
+        self.assertIn('Período inválido', reply)
+
+    def test_daily_report(self):
+        config = {'grupos': {'Trans': ['sinfuldolls', 'Radartrans']}}
+        reply = bot.daily_report(
+            config, 'Trans', {'sinfuldolls': 1420, 'Radartrans': 987, 'fora': 9999})
+        self.assertIn('Você teve 2.407 acessos hoje', reply)
+        self.assertIn('1. sinfuldolls: 1.420 acessos', reply)
+        self.assertNotIn('fora', reply)
+
     def test_processing_persists_before_reply_and_requests_deploy(self):
         events = []
         update = {'update_id': 10, 'message': {'from': {'id': 123},
