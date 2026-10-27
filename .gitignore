@@ -3,3 +3,5 @@ __pycache__/
 _site/
 .env
 .env.*
+KIT-TEMPLATE/
+PROMPT-CENTRAL-LINKS.txt
