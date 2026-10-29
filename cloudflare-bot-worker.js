@@ -314,6 +314,24 @@ export default {
     const url = new URL(request.url);
     const cors = { "Access-Control-Allow-Origin": "*", "Content-Type": "application/json", "Cache-Control": "no-store" };
     if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: cors });
+    if (url.pathname === "/go") {
+      const key = url.searchParams.get("bot") || "";
+      const source = url.searchParams.get("src") || "";
+      if (!NAME_RE.test(key)) return new Response("Link inválido", { status: 400 });
+      const config = await getConfig(env);
+      const destination = config.destinos[key];
+      if (!validDestination(destination)) return new Response("Link não encontrado", { status: 404 });
+      // A métrica é gravada depois da resposta e nunca segura o visitante.
+      if (env.DB) {
+        ctx.waitUntil(env.DB.prepare(
+          "INSERT INTO click_events (bot, src, occurred_at) VALUES (?1, ?2, ?3)"
+        ).bind(key, NAME_RE.test(source) ? source : null, Date.now()).run().catch(console.error));
+      }
+      return new Response(null, {
+        status: 302,
+        headers: { "Location": destination, "Cache-Control": "no-store" }
+      });
+    }
     if (url.pathname === "/" || url.pathname === "/config") {
       const config = await getConfig(env);
       return new Response(JSON.stringify({ destinos: config.destinos, grupos: config.grupos, enviarOrigemAoBot: false }), { headers: cors });

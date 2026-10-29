@@ -5,15 +5,18 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex, nofollow">
   <meta name="referrer" content="no-referrer">
+  <link rel="preconnect" href="https://telelink-bot.ghostlab.cfd" crossorigin>
+  <link rel="dns-prefetch" href="//telelink-bot.ghostlab.cfd">
   <title>Redirecionando</title>
   <style>
-    *{box-sizing:border-box}body{margin:0;min-height:100svh;display:grid;place-items:center;background:#fff;color:#59636b;font:14px/1.5 system-ui,sans-serif}main{display:none;width:min(92vw,280px);text-align:center}main.visivel{display:block}h1{font-size:16px;color:#26323a;margin:0 0 8px}p{margin:0 0 14px}a,button{font:inherit}#continuar,button{display:inline-block;padding:9px 14px;border:0;border-radius:7px;background:#2aabee;color:#fff;text-decoration:none;cursor:pointer}a:focus-visible,button:focus-visible{outline:2px solid #26323a;outline-offset:3px}[hidden]{display:none!important}.nota{font-size:12px;margin-top:10px;color:#7b858c}
+    *{box-sizing:border-box}html,body{margin:0;min-height:100%;background:#050505}body{min-height:100svh;display:grid;place-items:center;color:#ff1f2d;font:12px/1.4 system-ui,sans-serif}main{display:none;text-align:center}main.visivel{display:block}.pulso{width:18px;height:18px;margin:0 auto 12px;border:2px solid #3d0005;border-top-color:#ff1f2d;border-radius:50%;animation:giro .55s linear infinite}@keyframes giro{to{transform:rotate(360deg)}}h1{font-size:11px;letter-spacing:.2em;margin:0 0 12px;text-transform:uppercase}p{margin:0 0 12px;color:#9b555a}a,button{font:inherit}#continuar,button{display:inline-block;padding:8px 12px;border:1px solid #ff1f2d;border-radius:4px;background:transparent;color:#ff1f2d;text-decoration:none;cursor:pointer}[hidden]{display:none!important}.nota{font-size:10px;color:#5e3437;margin-top:8px}
   </style>
 </head>
 <body>
   <main>
-    <h1 id="titulo">Abrindo Telegram…</h1>
-    <p id="status" role="status" aria-live="polite">Se nada acontecer, continue abaixo.</p>
+    <div class="pulso" aria-hidden="true"></div>
+    <h1 id="titulo">Redirecionando</h1>
+    <p id="status" role="status" aria-live="polite">Acesso rápido</p>
     <a id="continuar" hidden rel="noreferrer">Abrir Telegram</a>
     <button id="tentar" hidden type="button">Tentar novamente</button>
     <p class="nota" id="nota" hidden>Redirecionamento seguro.</p>

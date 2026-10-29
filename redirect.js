@@ -64,65 +64,30 @@
   const panel = document.querySelector("main");
   retry.addEventListener("click", () => window.location.reload());
 
-  const API_URL = "https://telelink-bot.ghostlab.cfd/config";
+  const FAST_REDIRECT_URL = "https://telelink-bot.ghostlab.cfd/go";
 
   async function start() {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 8000);
     try {
-      let configData = null;
-
-      // 1. Tenta buscar em tempo real na API ultra-rápida (Cloudflare KV)
-      try {
-        const liveUrl = new URL(API_URL);
-        liveUrl.searchParams.set("v", Date.now().toString());
-        const apiRes = await fetch(liveUrl, { cache: "no-store", signal: controller.signal });
-        if (apiRes.ok) {
-          const apiConfig = await apiRes.json();
-          const requestedKey = new URLSearchParams(window.location.search).get("bot");
-          // Uma API desatualizada não pode esconder links já publicados no GitHub.
-          if (!apiConfig.destinos || !requestedKey ||
-              Object.prototype.hasOwnProperty.call(apiConfig.destinos, requestedKey)) {
-            configData = apiConfig;
-          }
-        }
-      } catch (err) {
-        // Fallback transparente se houver erro de rede
-      }
-
-      // 2. Se a API falhar ou não conhecer o link, usa o config.json publicado.
-      if (!configData) {
-        const configUrl = new URL("config.json", window.location.href);
-        configUrl.searchParams.set("v", Date.now().toString());
-        const response = await fetch(configUrl, { cache: "no-store", signal: controller.signal });
-        if (!response.ok) throw new Error("Configuração indisponível.");
-        configData = await response.json();
-      }
-
-      const destination = resolveDestination(configData, window.location.search);
-      recordAccess(configData, window.location.search);
-      link.href = destination;
-      // A tela fica totalmente limpa durante o redirecionamento normal.
-      const fallbackTimer = setTimeout(() => {
+      const params = new URLSearchParams(window.location.search);
+      const key = params.get("bot") || "";
+      const source = params.get("src") || "";
+      if (!/^[A-Za-z0-9_-]{1,64}$/.test(key)) throw new Error("Link inválido");
+      const destination = new URL(FAST_REDIRECT_URL);
+      destination.searchParams.set("bot", key);
+      if (/^[A-Za-z0-9_-]{1,64}$/.test(source)) destination.searchParams.set("src", source);
+      link.href = destination.href;
+      // Normalmente a navegação acontece antes de qualquer elemento aparecer.
+      setTimeout(() => {
         link.hidden = false;
         document.getElementById("nota").hidden = false;
         panel.classList.add("visivel");
-      }, 1200);
-      setTimeout(() => {
-        try { window.location.replace(destination); }
-        catch {
-          clearTimeout(fallbackTimer);
-          link.hidden = false;
-          panel.classList.add("visivel");
-        }
-      }, 0);
+      }, 350);
+      window.location.replace(destination.href);
     } catch {
       title.textContent = "Acesso indisponível.";
       status.textContent = "Tente novamente em instantes.";
       retry.hidden = false;
       panel.classList.add("visivel");
-    } finally {
-      clearTimeout(timeout);
     }
   }
   start();
