@@ -61,9 +61,10 @@
   const status = document.getElementById("status");
   const link = document.getElementById("continuar");
   const retry = document.getElementById("tentar");
+  const panel = document.querySelector("main");
   retry.addEventListener("click", () => window.location.reload());
 
-  const API_URL = "https://throbbing-feather-954e.sablovisck.workers.dev/config";
+  const API_URL = "https://telelink-bot.ghostlab.cfd/config";
 
   async function start() {
     const controller = new AbortController();
@@ -101,19 +102,25 @@
       const destination = resolveDestination(configData, window.location.search);
       recordAccess(configData, window.location.search);
       link.href = destination;
-      link.hidden = false;
-      document.getElementById("nota").hidden = false;
-      title.textContent = "Seu acesso está pronto.";
-      status.textContent = "Você será encaminhado ao Telegram.";
-      // O botão fica disponível mesmo se o navegador bloquear o redirecionamento.
+      // A tela fica totalmente limpa durante o redirecionamento normal.
+      const fallbackTimer = setTimeout(() => {
+        link.hidden = false;
+        document.getElementById("nota").hidden = false;
+        panel.classList.add("visivel");
+      }, 1200);
       setTimeout(() => {
         try { window.location.replace(destination); }
-        catch { status.textContent = "Toque no botão para continuar ao Telegram."; }
+        catch {
+          clearTimeout(fallbackTimer);
+          link.hidden = false;
+          panel.classList.add("visivel");
+        }
       }, 0);
     } catch {
       title.textContent = "Acesso indisponível.";
-      status.textContent = "Não foi possível carregar o link agora. Tente novamente em instantes.";
+      status.textContent = "Tente novamente em instantes.";
       retry.hidden = false;
+      panel.classList.add("visivel");
     } finally {
       clearTimeout(timeout);
     }

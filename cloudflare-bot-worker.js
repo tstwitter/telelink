@@ -30,7 +30,8 @@ const DEFAULT_DESTINOS = {
   latinasTSx: "https://t.me/+H-YYmpwMutJmMDMx",
   hottbrazilians: "https://t.me/+H-YYmpwMutJmMDMx",
   brtgirlsecrets: "https://t.me/+H-YYmpwMutJmMDMx",
-  transyula: "https://t.me/+H-YYmpwMutJmMDMx"
+  transyula: "https://t.me/+H-YYmpwMutJmMDMx",
+  fofocasreservadas: "https://t.me/+H-YYmpwMutJmMDMx"
 };
 
 const DEFAULT_GRUPOS = {
@@ -38,7 +39,8 @@ const DEFAULT_GRUPOS = {
     "sinfuldolls", "Centraldoll_", "Radartrans", "anatrans_fc", "transpopts",
     "Feedcherry", "ts_profana", "noticiapink", "MidiasTS", "transpicybr",
     "latinatgfever", "Trannylatinas", "brdolllust", "latinastranny",
-    "latinasTSx", "hottbrazilians", "brtgirlsecrets", "transyula"
+    "latinasTSx", "hottbrazilians", "brtgirlsecrets", "transyula",
+    "fofocasreservadas"
   ]
 };
 

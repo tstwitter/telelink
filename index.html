@@ -5,20 +5,19 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex, nofollow">
   <meta name="referrer" content="no-referrer">
-  <title>Acessar Telegram</title>
+  <title>Redirecionando</title>
   <style>
-    *{box-sizing:border-box}body{margin:0;min-height:100svh;display:grid;place-items:center;padding:24px;background:#f3f7fa;color:#173347;font:17px/1.6 system-ui,sans-serif}main{width:100%;max-width:440px;background:white;border:1px solid #dce7ef;border-radius:20px;padding:36px;box-shadow:0 12px 40px #17334708}small{font-weight:700;letter-spacing:.14em;color:#436577}h1{font-size:30px;line-height:1.2;margin:18px 0}p{color:#476172}a,button{font:inherit}#continuar,button{display:block;text-align:center;width:100%;padding:14px 20px;border:0;border-radius:10px;background:#096caa;color:white;font-weight:650;text-decoration:none;cursor:pointer}a:focus-visible,button:focus-visible{outline:3px solid #173347;outline-offset:4px}[hidden]{display:none!important}.nota{font-size:14px;margin-bottom:0}
+    *{box-sizing:border-box}body{margin:0;min-height:100svh;display:grid;place-items:center;background:#fff;color:#59636b;font:14px/1.5 system-ui,sans-serif}main{display:none;width:min(92vw,280px);text-align:center}main.visivel{display:block}h1{font-size:16px;color:#26323a;margin:0 0 8px}p{margin:0 0 14px}a,button{font:inherit}#continuar,button{display:inline-block;padding:9px 14px;border:0;border-radius:7px;background:#2aabee;color:#fff;text-decoration:none;cursor:pointer}a:focus-visible,button:focus-visible{outline:2px solid #26323a;outline-offset:3px}[hidden]{display:none!important}.nota{font-size:12px;margin-top:10px;color:#7b858c}
   </style>
 </head>
 <body>
   <main>
-    <small>TELEGRAM</small>
-    <h1 id="titulo">Só um instante.</h1>
-    <p id="status" role="status" aria-live="polite">Estamos preparando seu acesso.</p>
+    <h1 id="titulo">Abrindo Telegram…</h1>
+    <p id="status" role="status" aria-live="polite">Se nada acontecer, continue abaixo.</p>
     <a id="continuar" hidden rel="noreferrer">Abrir Telegram</a>
     <button id="tentar" hidden type="button">Tentar novamente</button>
-    <p class="nota" id="nota" hidden>Se não abrir automaticamente, toque no botão acima.</p>
-    <noscript><p>Ative o JavaScript e recarregue esta página para consultar o endereço atual do Telegram.</p></noscript>
+    <p class="nota" id="nota" hidden>Redirecionamento seguro.</p>
+    <noscript><p>Ative o JavaScript para continuar.</p></noscript>
   </main>
   <script src="redirect.js"></script>
 </body>
